@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Recommendation Algorithm</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<header>
+    <h1>Do you like this song?</h1>
+</header>
+
+<div class = "sangetitel">
+    <br>
+    <p id="songName"></p>
+</div>
+
+
+<body oncontextmenu="return false";>
+    <br>
+    <iframe src="" id="Player" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+    <br>
+
+<div class = "button">
+        <button id = "Dislike">Dislike</button>
+        <button id = "Not sure">Not sure</button> 
+        <button id = "Like">Like</button>
+    </div>
+    <p id="test"></p>
+    
+    <script>
+        class Genre {
+            constructor(a) {
+                this.navn = a;
+                this.point = 0;
+            }
+        }
+
+        let index = 0; //Variabel vi bruger til at vælge sang
+        let count = 0; //Variabel der tæller hvor mange sange der er blevet vist
+        let sangArr = []; //Array til at holde alle sang objekterne
+        let brugteSange = []; //Array til at holde index til de sange vi har vist
+        let genrer = []; //Array til at holde genre objekterne
+        let genrerNavne = ["Rock", "Pop", "Hip-Hop", "Country", "R&B", "Classical", "Jazz", "EDM"]; //Array med alle de forskellige genrer vi har
+
+        //Der sker en asynkron funktion her, hvilket betyder vi bliver nødt til at vente på den første funktion er færdig før vi kan gå videre
+        readList().then( () =>  setLink());
+        fillGenres(); //Funktion til at fylde arrayet med genrerne
+
+        //Funktionen der kører når man klikker på 'Dislike' knappen
+        document.getElementById("Dislike").onclick = () => {
+            count++;
+            for (let i = 0; i < genrer.length; i++) {
+                if(sangArr[index].genre == genrer[i].navn) genrer[i].point += -1;
+            }
+            brugteSange.push(index);
+            checkIfDone();
+            changeURL();
+        }
+
+        //Funktionen der kører når man klikker på 'Not sure' knappen. count ryger ikke op da der ikke sker noget her 
+        document.getElementById("Not sure").onclick = () => {
+            brugteSange.push(index);
+            checkIfDone();
+            changeURL();
+        }
+
+        //Funktionen der kører når man klikker på 'Like' knappen
+        document.getElementById("Like").onclick = () => {
+            count += 2;
+            for (let i = 0; i < genrer.length; i++) {
+                if(sangArr[index].genre == genrer[i].navn) genrer[i].point += 1;
+            }
+            brugteSange.push(index);
+            checkIfDone();
+            changeURL();
+        }
+        
+        //Funktion der tager alle sang-objekterne fra vores JSON fil og fylder et array op med dem
+        async function readList() {
+            await fetch("sange.json")
+                .then(res => res.json())
+                .then(data => sangArr = data);
+        }
+
+        //Funktion vi kører i starten til at vise den første sang
+        function setLink() {
+            index = Math.floor(Math.random() * sangArr.length);
+            document.getElementById("Player").setAttribute("src", sangArr[index].link);
+            document.getElementById("songName").innerHTML = sangArr[index].titel + " by " + sangArr[index].band;
+        }
+
+
+        //Funktion vi bruger til at tjekke om vi allerede har vist en sang, samt skifter sangen og titellen vi viser
+        function changeURL() {
+            index = Math.floor(Math.random() * sangArr.length);
+            if(brugteSange.includes(index)) {
+                changeURL();
+            } else {
+                document.getElementById("Player").setAttribute("src", sangArr[index].link);
+                document.getElementById("songName").innerHTML = sangArr[index].titel + " by " + sangArr[index].band;
+            }
+        }
+
+        //Funktion der stopper hvis du har 'liket' én genre nok eller du har gået i gennem nok sange
+        function checkIfDone() {
+            for(let i = 0; i < genrer.length; i++) {
+                if(genrer[i].point >= 5) {
+                    getReady();
+                    location.href="endScreen.html";    
+                }
+            }
+            if(count >= 20) {
+                getReady();
+                location.href="endScreen.html";
+            }
+        }
+
+        function getReady() {
+            localStorage.setItem("genrer", JSON.stringify(genrer));
+            localStorage.setItem("brugteSange", JSON.stringify(brugteSange));
+            localStorage.setItem("sangArr", JSON.stringify(sangArr));
+        }
+
+        //Funktion vi bruger til at fylde et array med genrer, så vi kan give dem point
+        function fillGenres() {
+            for (let i = 0; i < genrerNavne.length; i++) {
+            genrer.push(new Genre(genrerNavne[i]));
+            }
+        }
+    </script>
+</body>

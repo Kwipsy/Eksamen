@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Recommendation Algorithm</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<header>
+    <h1> M. R. A.</h1>
+</header>
+
+<body oncontextmenu="return false" ;>
+    <div class="brødtekst">
+        <p>You're done!</p>
+        <p>These are the songs we recommend for you:</p>
+    </div>
+
+    <div class="sangetitel">
+        <p id="visSange"></p>
+    </div>
+
+    <script>
+        class Sang { //Klasse der minder om den vi bruger i vores JSON fil
+            constructor(a, b, c) {
+                this.titel = a;
+                this.band = b;
+                this.genre = c;
+            }
+        }
+
+        //Her henter vi nogle arrays fra forrige side vi skal bruge, samt laver to nye arrays vi skal bruge senere
+        let genrer = JSON.parse(localStorage.getItem("genrer"));
+        let brugteSange = JSON.parse(localStorage.getItem("brugteSange"));
+        let sangArr = JSON.parse(localStorage.getItem("sangArr"));
+        let tempSange = [];
+        let nyeSange = [];
+
+        genrer.sort((a,b) => b.point - a.point); //Funktion der sorterer genrerne fra flest til færrest point
+        recommender();
+
+        function recommender() {
+            //For loop vi bruger til at filtrere alle sange der tilhører en genre med 0 eller mindre point
+            //Samt sange man allerede har hørt
+            for (let i = 0; i < sangArr.length; i++) {
+                for (let j = 0; j < genrer.length; j++) {
+                    if (sangArr[i].genre === genrer[j].navn && genrer[j].point > 0 && brugteSange.includes(i) === false) {
+                        tempSange.push(new Sang(sangArr[i].titel, sangArr[i].band, sangArr[i].genre));
+                    }
+                }
+            }
+
+            //Funktion der tager 'x' antal sange fra hver genre hvis point er lig 'x'
+            //Det betyder hvis den genre med flest point har 5 point, tager den 5 sange fra den genre
+            for (let i = 0; i < genrer.length; i++) {
+                const temp = tempSange.filter(a => a.genre === genrer[i].navn); //Her laver vi en midlertidig array med sange der alle har samme genre
+                let tempArr = [];
+                let n = 0;
+                for (let j = 0; j < genrer[i].point; j++) {
+                    /*n = getInt(temp.length, tempArr);*/
+                    n = Math.floor(Math.random() * temp.length);
+                    while(tempArr.includes(n)) { //Vi tjekker her at tallet n ikke allerede er brugt, da vi ikke vil anbefale den samme sang to gange
+                        n = Math.floor(Math.random() * temp.length);
+                    }
+                    tempArr.push(n);
+                    nyeSange.push(new Sang(temp[n].titel, temp[n].band, "")); //Fylder det tomme array op med tilfælde sange vi vil anbefale
+                }
+            }
+
+            for (let i = 0; i < nyeSange.length; i++) {
+                document.getElementById("visSange").innerHTML += nyeSange[i].titel + " by " + nyeSange[i].band + "<br>"
+            }
+        }
+
+        //Funktion vi startede med at bruge inden while loopet længere oppe 
+        /* 
+        function getInt(len, arr) {            
+            let int = Math.floor(Math.random() * len);
+            console.log(int);
+            if (arr.includes(int)) {
+                getInt(len, arr);
+            } else {
+                return int;
+            }
+
+        }*/
+    </script>
+</body>
